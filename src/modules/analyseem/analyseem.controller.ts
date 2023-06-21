@@ -21,5 +21,15 @@ createOffre(
     return this.analyseemService.getall();
   }
 
+  @Get('count')
+  async getNumberOfDeclarationsToday(): Promise<number> {
+    return this.analyseemService.getNumberOfDeclarationsToday();
+  }
+
+  @Get('distribution')
+  async getCriticiteDistribution(): Promise<{ criticite: string; percentage: number }[]> {
+    return await this.analyseemService.getCriticiteDistribution();
+  }
+
   }
   

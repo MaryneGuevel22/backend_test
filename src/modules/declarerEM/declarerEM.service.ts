@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger, NotFoundException,UnauthorizedException } from '@nestjs/common';
 
 import {InjectRepository} from '@nestjs/typeorm'
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { CreateOffreDto } from 'src/common/dtos/create-offre.dto';
 import { GetOffresFilterDto } from 'src/common/dtos/get-offres-filter.dto';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
@@ -169,7 +169,80 @@ declared.status=DeclardStatus.VALIDER;
 await declared.save();
 return declared
   }
+
+  //Test
+
+  async getNumberOfDeclarationsToday(): Promise<number> {
+    const currentDate = new Date();
+    const startOfDay = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      currentDate.getDate()
+    );
+    const endOfDay = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      currentDate.getDate(),
+      23,
+      59,
+      59
+    );
   
+    const count = await this.declarerRepository.count({
+      where: {
+        Date_Dec: Between(startOfDay, endOfDay),
+      },
+    });
+  
+    return count;
+  }
+
+
+  async getNumberOfEMToday(): Promise<number> {
+    const currentDate = new Date();
+    const startOfDay = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      currentDate.getDate()
+    );
+    const endOfDay = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      currentDate.getDate(),
+      23,
+      59,
+      59
+    );
+  
+    const count = await this.declarerRepository.count({
+      where: {
+        DateEvent: Between(startOfDay, endOfDay),
+      },
+    });
+  
+    return count;
+  }
+
+  async getNumberOfDeclarationsByService(service: string): Promise<number> {
+    return await this.declarerRepository.count({
+      where: {
+        service:service,
+      },
+    });;
+  }
+  
+  async getNumberOfDeclarationsForAllServices(): Promise<{ service: string; count: number }[]> {
+    const services = ['Gérontologie','Mère enfant', 'Chirurgie', 'Médico-Technique', 'Médecine', 'Plateau Technique']; // Add all your services here
+    const results: { service: string; count: number }[] = [];
+
+    for (const service of services) {
+      const count = await this.getNumberOfDeclarationsByService(service);
+      results.push({ service, count });
+    }
+
+    return results;
+  }
+
 }
     
 

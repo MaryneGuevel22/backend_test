@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger, NotFoundException,UnauthorizedException } from '@nestjs/common';
 
 import {InjectRepository} from '@nestjs/typeorm'
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { Analyseem } from 'src/enteties/analyseem.entity';
 import { CreateAnalyseemDto } from 'src/common/dtos/analyseem-create.dto';
 import { DeclarerService } from '../declarerEM/declarerEM.service';
@@ -112,6 +112,68 @@ export class AnalyseemService {
   
 }
     
+async getNumberOfDeclarationsToday(): Promise<number> {
+  const currentDate = new Date();
+  const startOfDay = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth(),
+    currentDate.getDate()
+  );
+  const endOfDay = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth(),
+    currentDate.getDate(),
+    23,
+    59,
+    59
+  );
 
+  const count = await this.analyseemRepository.count({
+    where: {
+      DateAnalyse: Between(startOfDay, endOfDay),
+    },
+  })
+
+  return count;
+}
+
+async getCriticiteDistribution(): Promise<{ criticite: string; percentage: number }[]> {
+  const results = await this.getall();
+
+  const totalCount = results.length;
+  let acceptableCount = 0;
+  let controlCount = 0;
+  let inacceptableCount = 0;
+
+  for (const result of results) {
+    const criticite = result.Criticite;
+
+    if (criticite === 'Risque acceptable') {
+      acceptableCount++;
+    } else if (criticite === 'Risque acceptable sous control') {
+      controlCount++;
+    } else if (criticite === 'Risque inacceptable') {
+      inacceptableCount++;
+    }
+  }
+
+  const totalPercentage = (acceptableCount + controlCount + inacceptableCount) / totalCount * 100;
+
+  // Calculate the adjusted percentages if the total percentage exceeds 100%
+  const acceptablePercentage = (acceptableCount / totalCount) * 100;
+  const controlPercentage = (controlCount / totalCount) * 100;
+  const inacceptablePercentage = (inacceptableCount / totalCount) * 100;
+
+  const adjustedTotalPercentage = acceptablePercentage + controlPercentage + inacceptablePercentage;
+  const adjustmentFactor = 100 / adjustedTotalPercentage;
+
+  const percentageDistribution: { criticite: string; percentage: number }[] = [
+    { criticite: 'Risque acceptable', percentage: acceptablePercentage * adjustmentFactor },
+    { criticite: 'Risque acceptable sous control', percentage: controlPercentage * adjustmentFactor },
+    { criticite: 'Risque inacceptable', percentage: inacceptablePercentage * adjustmentFactor },
+  ];
+
+  return percentageDistribution;
+}
     
 }

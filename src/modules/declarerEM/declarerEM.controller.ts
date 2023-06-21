@@ -47,7 +47,22 @@ updateOffreStatus(
 ): Promise<Declarerem>{
 return this.declaredService.updateDeclaredStatus(id);
 } 
+
+@Get('count')
+  async getNumberOfDeclarationsToday(): Promise<number> {
+    return this.declaredService.getNumberOfDeclarationsToday();
+  }
+
+  @Get('countNeverEvent')
+  async getNumberOfEMToday(): Promise<number> {
+    return this.declaredService.getNumberOfDeclarationsToday();
+  }
   
+  @Get('countGraphique')
+  async getNumberOfDeclarationsForAllServices(): Promise<{ service: string; count: number }[]> {
+    return this.declaredService.getNumberOfDeclarationsForAllServices();
+  }
+
 }
 
   
